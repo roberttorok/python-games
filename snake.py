@@ -6,8 +6,7 @@ import math
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 600
 
-# in ms
-FRAME_DELAY = 50
+FRAME_DELAY = 90
 
 BLACK = (0, 0, 0)
 GREEN = (0, 255, 0)
@@ -23,13 +22,20 @@ UP = -3
 RIGHT = 2
 LEFT = -4 
 
-UNIT_SIZE = 20
+UNIT_SIZE = 40
+
+class Pos:
+    x = 0
+    y = 0
+    def __eq__(self, other):
+        return self.x == other.x and self.y == other.y
 
 class Snake:
     def __init__(self):
         self.direction = [DOWN, UP, RIGHT, LEFT][random.randint(0, 3)]
         self.body = [random_screen_unit()]
-        self.aten_foods = []
+        self.head = self.body[0]
+        self.eaten_foods = []
 
 
     def can_move_direction(self, new_direction):
@@ -43,17 +49,19 @@ class Snake:
 
 
     def move_head(self, direction):
-        self.body[0][abs(direction) % 2] += UNIT_SIZE * sign(direction)
+        if direction == UP or direction == DOWN:
+            self.head.y += UNIT_SIZE * sign(direction)
+        else:
+            self.head.x += UNIT_SIZE * sign(direction)
 
 
     def leaves_screen(self):
-        return self.body[0][0] < 0 or self.body[0][0] > SCREEN_WIDTH or self.body[0][1] < 0 or self.body[0][1] > SCREEN_HEIGHT
+        return not ((0 <= self.head.x <= SCREEN_WIDTH - UNIT_SIZE) and (0 <= self.head.y <= SCREEN_HEIGHT - UNIT_SIZE))
 
 
     def head_collides_with_body(self):
-        head = self.body[0]
         for snake_part in self.body[1:]:
-            if snake_part[0] == head[0] and snake_part[1] == head[1]:
+            if snake_part == self.head:
                 return True
         return False
 
@@ -62,24 +70,23 @@ class Snake:
         old_tail = self.body[-1]
         i = len(self.body) - 1
         while i > 0:
-            self.body[i][0] = self.body[i - 1][0]
-            self.body[i][1] = self.body[i - 1][1]
+            self.body[i].x = self.body[i - 1].x
+            self.body[i].y = self.body[i - 1].y
             i -= 1
 
         temp_list = []
-        for food in self.aten_foods:
-            if food[0] == old_tail[0] and food[1] == old_tail[1]:
-                self.body.append(list(food))
+        for food in self.eaten_foods:
+            if food == old_tail:
+                self.body.append(food)
             else:
                 temp_list.append(food)
-        self.aten_foods = temp_list
-
+        self.eaten_foods = temp_list
         self.move_head(self.direction)
                     
 
     def eats_food(self, food):
-        if food[0] == self.body[0][0] and food[1] == self.body[0][1]:
-            self.aten_foods.append(list(food))
+        if food == self.head:
+            self.eaten_foods.append(food)
             return True
         else:
             return False
@@ -95,7 +102,10 @@ def sign(num):
 
 
 def random_screen_unit():
-    return [random.randint(0, SCREEN_WIDTH // UNIT_SIZE) * UNIT_SIZE, random.randint(0, SCREEN_HEIGHT // UNIT_SIZE) * UNIT_SIZE]
+    pos = Pos()
+    pos.x = random.randint(0, SCREEN_WIDTH // UNIT_SIZE - 1) * UNIT_SIZE
+    pos.y = random.randint(0, SCREEN_HEIGHT // UNIT_SIZE - 1) * UNIT_SIZE
+    return pos
 
 
 def display_text(text, x, y):
@@ -108,7 +118,6 @@ snake = Snake()
 food = random_screen_unit()
 
 while True:
-    pygame.time.delay(FRAME_DELAY)
     screen.fill(BLACK)
 
     display_text("Points: %d" % (len(snake.body)), 20, 20)
@@ -127,11 +136,12 @@ while True:
         food = random_screen_unit()
 
     for snake_unit in snake.body:
-        pygame.draw.rect(screen, WHITE, (snake_unit[0], snake_unit[1], UNIT_SIZE, UNIT_SIZE), 0)
+        pygame.draw.rect(screen, WHITE, (snake_unit.x, snake_unit.y, UNIT_SIZE, UNIT_SIZE), 0)
 
-    pygame.draw.rect(screen, GREEN, (food[0], food[1], UNIT_SIZE, UNIT_SIZE), 0)
+    pygame.draw.rect(screen, GREEN, (food.x, food.y, UNIT_SIZE, UNIT_SIZE), 0)
 
     pygame.display.update()
+    pygame.time.delay(FRAME_DELAY)
 
     keys = pygame.key.get_pressed()
     if keys[pygame.K_UP]: snake.change_direction(UP)
