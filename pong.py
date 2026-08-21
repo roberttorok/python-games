@@ -118,7 +118,7 @@ def display_text(text, x, y):
 
 pygame.init()
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-pygame.display.set_caption('Pong Game | codingboost.com')
+pygame.display.set_caption('Pong Game')
 pygame.font.init()
 
 ball = Ball()
