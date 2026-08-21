@@ -14,7 +14,7 @@ WHITE = (255, 255, 255)
 
 pygame.init()
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-pygame.display.set_caption('Snake | codingboost.com')
+pygame.display.set_caption('Snake')
 pygame.font.init()
 
 DOWN = 1
